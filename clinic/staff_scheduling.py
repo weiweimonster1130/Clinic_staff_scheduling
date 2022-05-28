@@ -39,6 +39,7 @@ model = cp_model.CpModel()
 
 shifts = {}
 worked_day = {}
+
 for ft in all_worker:
     for day in all_days:
         worked_day[(ft, day)] = model.NewIntVar(0, 1, "worked_day[%i,%i]" % (ft, day))
@@ -47,11 +48,11 @@ for ft in all_worker:
             shifts[(ft, day, shift)] = model.NewIntVar(0, 1, "shifts[%i,%i,%i]" % (ft, day, shift))
             b = model.NewBoolVar('b')
             model.Add(shifts[(ft, day, shift)] == 1).OnlyEnforceIf(b)
-            model.Add(shifts[(ft, day, shift)] == 0).OnlyEnforceIf(b.Not())
-
+            # if shifts[(ft, day, drift)] == 1:
+            #       worked_day[(ft, day)] = 1
+            # else does nothing
             model.Add(worked_day[(ft, day)] == 1).OnlyEnforceIf(b)
 
-shifts_flat = [shifts[ft, day, shift] for ft in all_worker for day in all_days for shift in all_shifts]
 
 
 #
@@ -72,12 +73,7 @@ for ft in all_full_time_worker:
     day_work = model.NewIntVar(0, NUM_DAYS_PER_WEEK, "day_work")
     for day in all_days:
         temp = [shifts[(ft, day, shift)] for shift in all_shifts]
-        b = model.NewBoolVar('b')
-        model.Add(sum(temp) > 0).OnlyEnforceIf(b)
-        model.Add(sum(temp) <= 0).OnlyEnforceIf(b.Not())
-        model.Add(day_work == )
-        if sum(temp) > 0:
-            day_work += 1
+
     model.Add(day_work <= NUM_DAYS_PER_WEEK - NUM_DAY_OFF_PER_WEEK)
 
 #
@@ -86,7 +82,19 @@ for ft in all_full_time_worker:
 #
 num_hour_work = 0
 for ft in all_full_time_worker:
-    temp = [shifts[(ft, day, shift)] for day in all_days for shift in all_shifts]
+    for day in all_days:
+        for shift in all_shifts:
+            '''
+            time_work = 3
+            if shift == 0:
+                time_work = 4
+            else 
+                if shift == 1:
+                    time_work = 3.5
+            '''
+            pass
+
+    # temp = [shifts[(ft, day, shift)] for day in all_days for shift in all_shifts]
     num_hour_work += sum(temp) * 4
 model.Minimize(NUM_FULL_TIME_WORKER * 40 - num_hour_work)
 model.Add(NUM_FULL_TIME_WORKER * 40 - num_hour_work >= 0)
